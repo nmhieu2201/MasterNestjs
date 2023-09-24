@@ -1,20 +1,35 @@
-# Use node:18.12.1-bullseye-slim as the base image
-FROM node:18.12.1-bullseye-slim
+FROM node:18-alpine As development
 
-# Set the working directory
-WORKDIR /app
+# Create app directory
+WORKDIR /usr/src/app
 
-# Copy the package.json and package-lock.json files
-COPY package*.json ./
+COPY --chown=node:node package*.json ./
 
-# Install the dependencies
 RUN npm ci
 
-# Copy the rest of the project files
-COPY . .
+COPY --chown=node:node . .
 
-# Expose port 3333
-EXPOSE 3333
+USER node
 
-# Set the command to run the project
-CMD [ "npm", "start" ]
+FROM node:18-alpine As build
+
+WORKDIR /usr/src/app
+
+COPY --chown=node:node package*.json ./
+COPY --chown=node:node --from=development /usr/src/app/node_modules ./node_modules
+COPY --chown=node:node . .
+
+RUN npm run build
+
+ENV NODE_ENV production
+
+RUN npm ci --only=production && npm cache clean --force
+
+USER node
+
+FROM node:18-alpine As production
+
+COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
+COPY --chown=node:node --from=build /usr/src/app/dist ./dist
+
+CMD [ "node", "dist/main.js" ]
