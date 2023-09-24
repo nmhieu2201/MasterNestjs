@@ -1,28 +1,13 @@
-version: "3.8"
 services:
-  nestjs:
-    build: .
-    container_name: nestjs
-    environment:
-      - NODE_ENV=production
-    ports:
-      - "3333:3333"
-    restart: unless-stopped
-    networks:
-      - app-network
+  api:
+    build:
+      dockerfile: Dockerfile
+      context: .
+      target: development
     volumes:
-      - .:/app
-    depends_on:
-      - postgres
-  postgres:
-        image: postgres:10.4
-        ports:
-            - "35000:5432"
-        environment: 
-            POSTGRES_USER: user
-            POSTGRES_PASSWORD: password
-            POSTGRES_DB: db
-networks:
-  app-network:
-    driver: bridge
-
+      - .:/usr/src/app
+    env_file:
+    - .env
+    command: npm run start:dev
+    ports:
+      - 3000:3000
