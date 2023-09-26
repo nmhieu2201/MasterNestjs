@@ -6,8 +6,16 @@ services:
       target: development
     volumes:
       - .:/usr/src/app
-    env_file:
-    - .env
     command: npm run start:dev
     ports:
       - 3000:3000
+  database:
+    container_name: mysql_nestjs
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: nest-js
+    # volumes:
+    #   - ./mysql/data:/var/lib/mysql
+    ports:
+      - 3306:3306
